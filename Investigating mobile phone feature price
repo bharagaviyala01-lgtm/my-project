@@ -1,0 +1,114 @@
+import pandas as pd 
+import numpy as np 
+import matplotlib.pyplot as plt 
+import seaborn as sns 
+from sklearn import linear_model 
+from sklearn.model_selection import train_test_split 
+from sklearn.linear_model import LinearRegression, ridge_regression 
+from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error 
+import os, joblib, pickle 
+from sklearn.svm import SVR 
+#Loading Dataset: 
+data=pd.read_csv("Datasets/Cellphone.csv") 
+data 
+data.shape # Number of rows and columns 
+data.describe() #statistical Analysis 
+#Data Cleansing: 
+data.info() 
+plt.scatter(data["weight"], data["Price"]) 
+plt.scatter(data["resoloution"], data["Price"]) 
+plt.scatter(data["ppi"], data["Price"]) 
+plt.scatter(data["battery"], data["Price"]) 
+plt.scatter(data["thickness"], data["Price"]) 
+plt.scatter(data["Front_Cam"], data["Price"]) 
+plt.scatter(data["RearCam"], data["Price"]) 
+plt.scatter(data["ram"], data["Price"]) 
+plt.scatter(data["cpu core"], data["Price"]) 
+plt.scatter(data["cpu freq"], data["Price"]) 
+plt.scatter(data["internal mem"], data["Price"]) 
+sns.pairplot(data)  
+data=data.drop(columns=["Product_id","Sale"]) #Dropping unwanted columns as they don't add 
+any 
+value to our analysis 
+corr=data.corr() 
+import plotly.express as px 
+fig = px.imshow(corr, text_auto=True,width=1000, height=1000) 
+fig.show() 
+# Split datset into X and Y variables 
+x=data.drop('Price',axis=1) 
+y=data['Price'] 
+x 
+x.shape 
+y.shape 
+X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2) 
+# Checking data dimensions 
+# Check the shape of the splits 
+print("X_train shape:", X_train.shape) 
+print("X_test shape:", X_test.shape) 
+print("y_train shape:", y_train.shape) 
+print("y_test shape:", y_test.shape) 
+mae_list = [] 
+mse_list = [] 
+rmse_list = [] 
+r2_list = [] 
+def calculateMetrics(algorithm,predict, testY): 
+# Regression metrics 
+mae = mean_absolute_error(testY, predict) 
+mse = mean_squared_error(testY, predict) 
+rmse = np.sqrt(mse) 
+r2 = r2_score(testY, predict) 
+mae_list.append(mae) 
+mse_list.append(mse) 
+rmse_list.append(rmse) 
+r2_list.append(r2) 
+print(f"{algorithm} Mean Absolute Error (MAE): {mae:.2f}") 
+print(f"{algorithm} Mean Squared Error (MSE): {mse:.2f}") 
+print(f"{algorithm} Root Mean Squared Error (RMSE): {rmse:.2f}") 
+print(f"{algorithm} R-squared (R²): {r2:.2f}") 
+plt.figure(figsize=(10, 6)) 
+sns.scatterplot(x=testY, y=predict, alpha=0.6) 
+plt.plot([min(testY), max(testY)], [min(testY), max(testY)], 'r--', lw=2) # Line of equality 
+plt.xlabel('True Values') 
+plt.ylabel('Predictions') 
+plt.title(algorithm) 
+plt.grid(True) 
+plt.show() 
+# Linear Regression Model 
+if os.path.exists('model/Linear.pkl'): 
+Linear = joblib.load('model/Linear.pkl') 
+print("Model loaded successfully.") 
+predict = Linear.predict(X_test) 
+DEPT OF CSE (DS) 
+36 
+KPRIT 
+SOURCE CODE 
+calculateMetrics("Linear Regresson", predict, y_test) 
+else: 
+Linear = LinearRegression() 
+Linear.fit(X_train, y_train) 
+joblib.dump(Linear, 'model/Linear.pkl') 
+print("Model saved successfully.") 
+predict = Linear.predict(X_test) 
+calculateMetrics("Linear Regresson", predict, y_test) 
+if os.path.exists('model/SVR.pkl'): 
+svr_model = joblib.load('model/SVR.pkl') 
+print("Model loaded successfully.") 
+else: 
+svr_model = SVR() 
+svr_model.fit(X_train, y_train) 
+joblib.dump(svr_model, 'model/SVR.pkl') 
+print("Model saved successfully.") 
+# Make predictions 
+predict = svr_model.predict(X_test) 
+# Calculate metrics 
+calculateMetrics("Support Vector Regression", predict, y_test) 
+# Model Prediction on Test Data 
+test = pd.read_csv('Datasets/test.csv') 
+test 
+testdata = test#.drop('Product_id', axis = 1) 
+testdata 
+#weight resoloution ppi cpu core cpu freq internal mem ram RearCam 
+Front_Cam battery thickness 
+predication = Linear.predict(testdata) 
+predication 
+test['Predicted Price'] = predication\test 
